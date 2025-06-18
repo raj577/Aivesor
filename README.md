@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # 📈 Nifty 200 Top Movers & AI Assistant App
 
@@ -17,6 +18,26 @@ A Flutter app showing top Nifty 200 movers, sorted by daily % change, with relev
 
 ---
 
+=======
+# 📈 Nifty 200 Top Movers & AI Assistant App
+
+A Flutter app showing top Nifty 200 movers, sorted by daily % change, with relevant news and an AI assistant that answers finance-related questions using smart prompts.
+
+---
+
+## ✨ Features
+
+- 📊 Real-time **Top 10 Nifty 200 Gainers**
+- 📈 Option to **View All** sorted by daily % increase
+- 📰 **News Screen** for top gainers with horizontal scroll
+- 🤖 Built-in **AI Assistant** with prompts like:
+    - "What is the PE ratio?"
+    - "What raw materials does it use?"
+    - "Who are its competitors?"
+
+---
+
+>>>>>>> 2f100892d2b54a6c2c30420fb932c19a442636ab
 ## 🧩 Tech Stack
 
 | Tech            | Purpose                             |

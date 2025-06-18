@@ -1,140 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../bloc/stock_bloc.dart';
+import '../bloc/stock_event.dart';
+import '../bloc/stock_state.dart';
+import '../model/stock_model.dart';
 
-
-
-
-class StockHomePage extends StatefulWidget {
-  @override
-  _StockHomePageState createState() => _StockHomePageState();
-}
-
-class _StockHomePageState extends State<StockHomePage> {
-  int selectedTabIndex = 0;
-
-  final List<Map<String, dynamic>> stocks = [
-    {'name': 'TechCorp', 'gain': 12.5, 'price': 150.25},
-    {'name': 'BioMed Inc.', 'gain': 10.8, 'price': 85.75},
-    {'name': 'Energy Solutions', 'gain': 9.2, 'price': 220.5},
-    {'name': 'Retail Group', 'gain': 8.5, 'price': 75.0},
-    {'name': 'Finance Co.', 'gain': 7.9, 'price': 300.0},
-    {'name': 'Auto Parts', 'gain': 6.7, 'price': 120.0},
-    {'name': 'Food & Bev', 'gain': 5.5, 'price': 90.0},
-    {'name': 'Telecom Ltd.', 'gain': 4.8, 'price': 180.0},
-  ];
-
-  final List<String> aiPrompts = [
-    "What is the PE ratio?",
-    "What raw materials does it use?",
-    "Who are its competitors?",
-  ];
+class StockHomePage extends StatelessWidget {
+  const StockHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Stocks', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Top Gainers"),
         centerTitle: true,
-        actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.search)),
-        ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(40),
-          child: Row(
-            children: [
-              _buildTabButton("Top Movers", 0),
-              _buildTabButton("News", 1),
-            ],
-          ),
-        ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: selectedTabIndex == 0
-                ? _buildStockList()
-                : _buildNewsPlaceholder(),
-          ),
-          Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Ask AI", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                SizedBox(height: 10),
-                ...aiPrompts.map((prompt) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // TODO: Call AI
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text("AI asked: $prompt"),
-                      ));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey[100],
-                      foregroundColor: Colors.black,
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: Center(child: Text(prompt)),
-                  ),
-                )),
-              ],
-            ),
-          ),
-        ],
+      body: BlocBuilder<StockBloc, StockState>(
+        builder: (context, state) {
+          if (state is StockLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (state is StockLoaded) {
+            return _buildStockList(state.stocks);
+          } else if (state is StockError) {
+            return Center(child: Text('❌ Error: ${state.message}'));
+          } else {
+            return const Center(child: Text("🔄 Press refresh to fetch data"));
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.read<StockBloc>().add(FetchStocks());
+        },
+        child: const Icon(Icons.refresh),
       ),
     );
   }
 
-  Widget _buildTabButton(String title, int index) {
-    final isSelected = selectedTabIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => selectedTabIndex = index),
-        child: Container(
-          alignment: Alignment.center,
-          padding: EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isSelected ? Colors.black : Colors.transparent,
-                width: 2,
-              ),
-            ),
-          ),
-          child: Text(
-            title,
-            style: TextStyle(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? Colors.black : Colors.grey,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStockList() {
+  Widget _buildStockList(List<Stock> stocks) {
     return ListView.builder(
       itemCount: stocks.length,
       itemBuilder: (context, index) {
         final stock = stocks[index];
-        return ListTile(
-          title: Text(stock['name']),
-          subtitle: Text('+${stock['gain']}%', style: TextStyle(color: Colors.blueGrey)),
-          trailing: Text('\$${stock['price'].toStringAsFixed(2)}'),
+        return Card(
+          elevation: 3,
+          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: Colors.blueAccent,
+              child: Text(
+                stock.tradingSymbol.substring(0, 1),
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            title: Text(stock.tradingSymbol),
+            subtitle: Text("OI: ${stock.opnInterest}\nChange: ${stock.percentChange.toStringAsFixed(2)}%"),
+            trailing: Text(
+              "${stock.netChangeOpnInterest.toStringAsFixed(0)}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            isThreeLine: true,
+          ),
         );
       },
-    );
-  }
-
-  Widget _buildNewsPlaceholder() {
-    return Center(
-      child: Text("News section coming soon!", style: TextStyle(fontSize: 16, color: Colors.grey)),
     );
   }
 }
